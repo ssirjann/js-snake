@@ -1,0 +1,728 @@
+<!-- 
+    SNAKE GAME CREATED WITH JAVASCRIPT ()
+    DEVELOPED BY: SIRJAN SHARMA
+ -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SNAKE</title>
+    <style type="text/css">
+
+        body {
+            background-color: #ccc5a9;
+        }
+
+        #myCanvas, #foodCanvas, #rockCanvas {
+            display: block;
+            margin: auto;
+            left: 250px;
+            top: 60px;
+            position: absolute;
+            border-color: #000;
+            border-width: 5px;
+        }
+        #foodCanvas, #rockCanvas {
+            z-index: 3;
+        }
+
+        #myCanvas {
+            background: #badbad
+        }
+
+        #start, .choice,  #display {
+            z-index: 10;
+            position: absolute;
+            padding: 5px;
+            font-size: 40px;
+            color: #f0e68c;
+            background: #3ed;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0px 5px 5px #eee;
+        }
+
+        #display {
+            cursor: auto;
+            visibility: hidden;
+        }
+
+        #start {
+            top: 220px;
+            left:650px;
+        }
+
+        #slug, #box {
+            top: 100px;
+        }
+
+
+        #worm, #free {
+            top: 200px;
+        }
+
+        #python {
+            top: 300px;
+        }
+
+        #rocky1 {
+            top: 300px;
+        }
+
+        #rocky2{
+            top: 340px;
+        }
+
+        #rocky3 {
+            top: 380px;
+        }
+
+        .rocky {
+            font-size: 25px;
+        }
+
+        .ground {
+            right: 10px;
+        }
+
+        #high-score {
+            position: absolute;
+            top: 550px;
+            left: 550px;
+            font-size: 30px;
+        }
+
+        .info {
+            width: 60%;
+            font-size: 20px;
+            text-align: center;
+            margin: 0px auto;
+            color: #555;
+        }
+
+        #startInfo {
+            visibility: visible;
+        }
+
+        #pauseInfo {
+            visibility: hidden;
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- 
+    * Uses 3 canvases
+    * first canvas is used to draw snake
+    * second canvas is used for food
+    * third canvas is used for rocks (hence has contents only in rocky game mode)
+ -->
+
+    <canvas id="myCanvas" height=500 width=900
+        style="border:5px solid #000000;">
+    </canvas>
+    
+    <canvas id="foodCanvas" height=500 width=900
+        style="border:5px solid #000000;">
+    </canvas>
+
+    <canvas id="rockCanvas" height=500 width=900
+        style="border:5px solid #000000;">
+    </canvas>
+        <p id="start" onclick="startGame()" title="Alternatively press space">Start</p>
+        <p class = "difficulty choice" id="slug" onclick="setDifficulty('slug')">Slug</p>
+        <p class = "difficulty choice" id="worm" onclick="setDifficulty('worm')">Worm</p>
+        <p class = "difficulty choice" id="python" onclick="setDifficulty('python')">Python</p>
+
+        <p class = "ground choice" id="box" onclick="setGround('box')">Box</p>
+        <p class = "ground choice" id="free" onclick="setGround('free')">Free</p>
+        <p class = "ground choice rocky" id="rocky1" onclick="setGround('rocky1')">Rocky(Fixed)</p>
+        <p class = "ground choice rocky" id="rocky2" onclick="setGround('rocky2')">Rocky(3%)</p>
+        <p class = "ground choice rocky" id="rocky3" onclick="setGround('rocky3')">Rocky(5%)</p>
+
+        <p class = "choice" onclick="showHighScore()" id="high-score">High Score??</p>
+    
+    <span id="display"> </span>
+    <div class="info" id="pauseInfo">Press 'p' to pause/Resume</div>
+    <div class="info" id="startInfo">Press space to start</div>
+
+
+    <script>
+        
+    /*
+        * ALL THE ARRAYS USED TO STORE POSITIONS HAVE x-position at even index (ex: grid[0], grid[2]) and y at odd (ex: grid[1], grid[3])
+        * Y-position of nth index is at index n+1 (ex. if a co-ordinate has its x at grid[10], the y is at grid[11])
+
+    */
+
+
+        canvas = document.getElementById("myCanvas");
+        context = canvas.getContext("2d");
+
+        starter=document.getElementById("start");
+        dc=document.getElementsByClassName('difficulty');
+        gt=document.getElementsByClassName('ground');
+        scoreDisplay=document.getElementById('display');
+        choice = document.getElementsByClassName('choice');
+
+        foodCanvas = document.getElementById("foodCanvas");
+        context2 = foodCanvas.getContext("2d")
+
+        rockCanvas = document.getElementById("rockCanvas");
+        context3 = rockCanvas.getContext("2d");
+
+        setDifficulty('worm');
+        setGround('box');
+        gameOver=true;
+        document.onkeydown = checkKey;
+
+        /*
+            *Function is triggered if the user 'clicks' on a difficulty
+            *Triggered at the beginning to set a default difficulty
+        */
+        function setDifficulty(speed) {
+            snake = speed;
+            switch(snake) {
+                case 'slug' :
+                    time = 60;
+                    break;
+                case 'worm' :
+                    time = 50;
+                    break;
+                case 'python' :
+                    time = 40;
+                    break;
+            }
+            for (var i = dc.length - 1; i >= 0; i--) {
+                if(dc[i].id == snake) {
+                    dc[i].style.background = '#bad';
+                } else {
+                    dc[i].style.background = '#3ed';
+                }
+            }
+        }
+
+        /*
+            *Function is triggered if the user 'clicks' on a game/ground type
+            *Triggered at the beginning to set a default ground
+        */
+        function setGround(type) {
+            ground = type;
+            switch (type) {
+                case 'box' : 
+                    canvas.style.borderWidth = '5px';
+                    foodCanvas.style.borderWidth = '5px';
+                    rockCanvas.style.borderWidth = '5px';
+                    break; 
+                case 'free' : 
+                    canvas.style.borderWidth = '1px';
+                    foodCanvas.style.borderWidth = '1px';
+                    rockCanvas.style.borderWidth = '1px';
+                    break;
+                case 'rocky1' :
+                    canvas.style.borderWidth = '5px';
+                    foodCanvas.style.borderWidth = '5px';
+                    rockCanvas.style.borderWidth = '5px';
+                    break;
+                case 'rocky2' :
+                    canvas.style.borderWidth = '5px';
+                    foodCanvas.style.borderWidth = '5px';
+                    rockCanvas.style.borderWidth = '5px';
+                    rockPC = 0.03;      //cover 3% ground with rocks
+                    break;
+                case 'rocky3' :
+                    canvas.style.borderWidth = '5px';
+                    foodCanvas.style.borderWidth = '5px';
+                    rockCanvas.style.borderWidth = '5px';
+                    rockPC = 0.05;      //cover 5% ground wits rocks
+                    break;
+            }
+            for (var i = gt.length - 1; i >= 0; i--) {          //update background color accordingly
+                if(gt[i].id == ground) {
+                    gt[i].style.background = '#bad';
+                } else {
+                    gt[i].style.background = '#3ed';
+                }
+            }
+        }
+
+        /*
+            * Triggered on click of start button on screen or space on keyboard 
+            * Initializes all required variables including arrays
+            * Hides buttons and displays scoreboard
+            * Sets inteval for movement (time of interval comes from setDifficulty)
+            * Calls necessary functions for starting
+        */
+        function startGame() {
+            scoreDisplay.style.visibility = 'visible';
+            scoreDisplay.style.top = '570px';
+            scoreDisplay.style.left = '900px';
+            starter.style.visibility = 'hidden';
+            for (var i = choice.length - 1; i >= 0; i--) {
+                choice[i].style.visibility = 'hidden';
+            };
+            document.getElementById('pauseInfo').style.visibility = 'visible';
+            document.getElementById('startInfo').style.visibility = 'hidden';
+
+            path=going= 'Right';
+            distance = 3;
+            x = y = distance;
+            l = 15;
+            gridCount = 0;
+            grid = new Array();  //all possible locations for snake, food and rocks (precise x and y positions)
+            moveBy = 1.1; 
+            Move = 1.1*l; 
+            a=b=0;
+            score = 0;
+            pos = new Array(x, y); //positions of snake's body
+            posCount = 0;
+
+            height = canvas.height;
+            width = canvas.width;
+            gameOver = false;
+            eat = 0;
+
+            canvas.height = round(height)+distance;
+            canvas.width = round(width)+distance;
+
+            height = canvas.height;
+            width = canvas.width;
+
+            foodCanvas.height = height;
+            foodCanvas.width = width;
+
+            rockCanvas.height = height;
+            rockCanvas.width = width;
+
+            context2.strokeStyle = "#3e3";
+
+            context.strokeStyle = "#000";
+            context.fillStyle = "#badbad";
+            context.fillRect(0, 0, width, height);
+
+            context3.clearRect(0, 0, width, height);
+
+            context2.fillStyle = "#a0a";
+            context.beginPath();
+            context.rect(x, y, l, l);
+            context.stroke();
+            context.closePath();
+
+            createGrid();
+            summonFood();
+
+            interval = setInterval(move, time);
+        }
+        
+        /*
+            * Creates grid of all the possible positions that the snake may be in
+            * These positions are used to know the exact and appropriate positions to summon foods
+            * If the selected ground is rocky, creates positions for those rocks and removes them from grid (as summoning food there creates 
+                problems)
+        */
+        function createGrid() {
+            rockCount=0;
+            rocks = new Array();
+            for(i=x; i<round(width); i+=Move) {
+                for(j=y; j<round(height); j+=Move) {
+                    grid[gridCount++] = i;
+                    grid[gridCount++] = j;
+
+                    //condition to add rocks in rocky fixed ground and ensure that the rocks aren't present in near locations at start
+                    if(ground=='rocky1' && (gridCount-2)%100==0 && (grid[gridCount-1]>=distance+l || grid[gridCount-2]>=distance+l+100 )){
+                        rocks[rockCount++] = grid[gridCount-2];
+                        rocks[rockCount++] = grid[gridCount-1];
+                    }
+                }
+            }
+            gridCount--;
+            if(ground=='rocky1') {
+                plotRocks();
+            }
+            
+            endx=grid[gridCount-1]; //last possible x ordinate (near the end)
+            endy=grid[gridCount]; //last possible y ordinate (near the end)
+
+            if(ground=='rocky2' || ground=='rocky3' ) { //summons rocks at random places
+				rocks = new Array();
+				for(i=0; i<rockPC*grid.length; i++) {
+					rocks[i] = Math.floor((Math.random())*grid.length);
+				}
+
+				for(i=0; i<rocks.length; i++) {
+						rocks[i] = grid[rocks[i]];
+				}
+				plotRocks();
+			}
+
+            //to remove positions of the rock from grid to prevent food from appearing there
+            if (ground=='rocky1' || ground=='rocky2' || ground=='rocky3') {    
+                for(i=0; i<grid.length; i+=2) { 
+                    for(j=0; j<rocks.length; j+=2) {
+                        if(grid[i]==rocks[j] && grid[i+1]==rocks[j+1]) {
+                            grid.splice(i,2);
+                            gridCount-=2;
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+            * Is called each time the snake moves
+            * The current positions of snake is pushed at the end of grid array
+            * In companion with summonFood() ensures that the food will not appear where the snake already is
+        */
+        function updateGrid() {
+            for(j=0; j<grid.length; j+=2) {
+                for(i=0; i<pos.length; i+=2) {
+                    if(pos[i]==grid[j] && pos[i+1] == grid[j+1]) {
+                        var a1 = grid[j];
+                        var a2 = grid[j+1];
+                        grid.splice(j, 2);
+                        grid.push(a1);
+                        grid.push(a2);
+                    }
+                }
+            }
+
+        }
+
+
+        /*
+            * Acts as complementary for createGrid();
+            * The positions of rocks for rocky ground is determined by createGrid() and is plotted by this function. 
+        */
+        function plotRocks() {
+            if(ground!='rocky1' && ground!='rocky2' && ground!='rocky3') {
+                return false;
+            }
+            context3.clearRect(0, 0, width, height);
+            context3.beginPath();
+            for(i=0; i<rocks.length; i+=2) {
+            	if(rocks[i+1]<15 && (ground=='rocky2' || ground=='rocky3') ) {
+            		rocks.splice(i, 2, -1,-1);
+            		continue;
+            	}
+                context3.fillStyle = "#000"
+                context3.rect(rocks[i], rocks[i+1], l, l);
+                context3.fill();
+            }
+            context3.closePath();
+        }
+
+        /*
+            * Triggered when the user presses a key
+            * If the game is not over or paused respond to the arrow keysfor movement
+            * If the game is not over respond to p for pause/resume
+            * If the game is over or not yet started respond to space key (to start the game)
+        */
+        function checkKey(e) {
+            if(e.keyIdentifier == "Up" || e.keyIdentifier == "Down" || e.keyIdentifier == "Left" || e.keyIdentifier == "Right" || e.keyIdentifier == "U+0050" || e.keyIdentifier=="U+0020") 
+                e.returnValue = false;
+            if(!gameOver) {
+                switch(e.keyIdentifier) {
+                    case "Up" :
+                        if(going != 'Down' && path!='paused') {
+                                path = 'Up'
+                        }
+                        break;
+                    case "Down" :
+                        if(going != 'Up' && path!='paused') {
+                            path = 'Down'
+                        }
+                        break;
+                    case "Left" :
+                        if(going != 'Right' && path!='paused') {
+                            path = 'Left'
+                        }
+                        break;
+                    case "Right" :
+                        if(going != 'Left' && path!='paused') {
+                            path = "Right"
+                        }
+                        break;
+                    case "U+0050" :
+                        if(path=='paused') {
+                            path = going;
+                        } else {
+                            path = 'paused';
+                        }
+                        break;
+                }
+            }
+            if(gameOver && e.keyIdentifier=="U+0020") {
+            	startGame();
+            }
+        }
+
+        /*
+            * When game has been started, this function is called at certain interval (based on difficulty)
+            * At each execution, it clears the snake entirely from the canvas
+            * Redraws the snake with updated position to make it "move"
+            * To update the canvas
+                    - remove the last two elements from the array (x and y position of last square of the snake)
+                    - update the position of variables x and y (the x and y position of the first square [mouth] of array)
+                    - add x,y at the starting of the array
+            * To eat 
+                    - check if eat has value
+                    - if yes don't remove last two elements and update eat as needed
+        */
+        function move() {
+            posCount=0;
+            context.clearRect(0, 0, width, height);
+            context.fillStyle = "#badbad";
+            context.fillRect(0, 0, width, height);
+            context.fillStyle = "#f04";
+
+            context.beginPath();
+            switch(path) {
+                case "Up" :
+                    moveUp();
+                    break;
+                case "Down" :
+                    moveDown();
+                    break;
+                case "Left" :
+                    moveLeft();
+                    break;
+                case "Right" :
+                    moveRight();
+                    break;
+            }
+
+            
+            for(i=0; i<pos.length; i+=2) {
+                context.rect(pos[i], pos[i+1], l, l);
+            }
+
+            context.stroke();
+            context.fill();
+            context.closePath();
+
+            checkFood();
+            checkPosition();
+        }
+
+        /*
+            * Complementary to move()
+            * Updates going path of snake
+            * If it has eaten food, increase its size
+        */
+        function moveUp() {
+            going='Up';
+            y=y-Move;
+
+            if(eat==0) {
+                pos.pop();
+                pos.pop();
+            } else {
+                eat--;
+            }
+            pos.splice(0, 0, x, y);
+        }
+
+        /*
+            * Complementary to move()
+            * Updates going path of snake
+            * If it has eaten food, increase its size
+        */
+        function moveDown() {
+            going='Down';
+            y=y+Move;
+            if(eat==0) {
+                pos.pop();
+                pos.pop();
+            } else {
+                eat--;
+            }
+            pos.splice(0, 0, x, y);
+        }
+
+        /*
+            * Complementary to move()
+            * Updates going path of snake
+            * If it has eaten food, increase its size
+        */
+        function moveLeft() {
+            going='Left';
+            x=x-Move;
+            if(eat==0) {
+                pos.pop();
+                pos.pop();
+            } else {
+                eat--;
+            }
+            pos.splice(0, 0, x, y);
+        }
+
+        /*
+            * Complementary to move()
+            * Updates going path of snake
+            * If it has eaten food, increase its size
+        */
+        function moveRight() {
+            going='Right';
+            x=x+Move;
+            if(eat==0) {
+                pos.pop();
+                pos.pop();
+            } else {
+                eat--;
+            }
+    
+            pos.splice(0, 0, x, y);
+        }
+
+        /*
+            * Summons food for the snake
+            * Triggered each time the present food is eaten by the snake
+            * To summon food
+                    - Get a random even number where it is less than twice the length of snake
+                            (because the last 2*length elements of grid are the current positions of snake)
+                    - Create a food where x is the element of grid at generated even nuber and y is the following element of array 
+        */
+        function summonFood() {
+                updateGrid();
+                scoreDisplay.style.fontSize = "40px";
+                scoreDisplay.innerHTML = 'Score: ' + (score);
+
+                context2.clearRect(0, 0, width, height);
+
+                while(foodx%2 != 0) {  //get an even number
+                    var foodx = Math.floor(Math.random()*(gridCount-(pos.length*2)));
+                }
+                var foody = foodx+1;
+                
+                foodx=grid[foodx];
+                foody=grid[foody];
+                
+                context2.beginPath();
+                context2.rect(a = foodx, b=foody, l, l);
+                context2.fill();
+                context2.closePath();
+
+        }
+
+        /*
+            * Rounds a number down to value where the snake can be 8 (can be outside the area of game)
+            * Has been used to scale the canvases properly with respect to the starting position and size of snake
+        */
+        function round(number) {
+            while ((number-distance)%(l*moveBy) != 0) {
+                number--;
+            }
+            return number;
+        }
+
+
+        /*
+            * Checks the current position of snake to determine if the game needs to be over/snake updated
+            * For box, checks if it hit the border or if it bit itself
+            * For rocky, checks if it hit the border or bit itself or hit the rock
+            * For free, checks if it bit itself to end the game. Checks if the reached beyond the screen and moves it to the border of opposite 
+                direction
+        */
+        function checkPosition() {
+            if(x>endx || x<distance || y>endy || y<distance) {
+                if(ground == 'box' || ground=='rocky1' || ground=='rocky2' || ground=='rocky3') {
+                    gameOver = true;
+                    console.log("border hit");
+                    endGame();
+                } else if(ground == 'free') {
+                    if (x>=endx && going=="Right") {
+                        //pos[0] also needs to be updated here. Other wise it is plotted then only updated (remove pos[0] here to see the difference)
+                        x = pos[0] = distance;          
+                    } else if (x <= distance && going == "Left") {
+                        x = pos[0] = endx;
+                    } else if (y>endy) {
+                        y = pos[1] = distance;
+                    } else if (y < distance) {
+                        y = pos[1] = endy;
+                    }
+                }
+            }
+
+            if(ground=='rocky1' || ground=='rocky2' || ground=='rocky3') {
+                for(i=0; i<rocks.length; i+=2){
+                    if(x==rocks[i] && y==rocks[i+1]) {
+                        gameOver = true;
+                        console.log("rock hit");
+                        endGame();
+                    }
+                }
+            }
+
+            for(i=6; i<pos.length; i+=2) {
+                if(x==pos[i] && y==pos[i+1]) {
+                        gameOver = true;
+                        console.log("rock hit");
+                        endGame();
+
+                }
+            }
+
+        }
+
+        /*
+            * Check if the snake has eaten the current food
+            * If yes, perform appropriate actions.
+        */
+        function checkFood() {
+            if(x==a && y==b) {
+                score++;
+                summonFood();
+                eat=3;  //This is the number of squares to add to the snake's body.
+            } 
+        }
+
+        /*
+            * Triggered when game is over (snake bites itself or hits border/rock)
+            * Clears the interval for move
+            * Updates high score
+            * Hides and displays elements as needed.
+        */
+        function endGame() {
+            context2.clearRect(0, 0, width, height);
+            context.text
+            
+            for (var i = choice.length - 1; i >= 0; i--) {
+                    choice[i].style.visibility = 'visible';
+            };
+
+            starter.style.visibility = 'visible';
+            document.getElementById('pauseInfo').style.visibility = 'visible';
+            document.getElementById('startInfo').style.visibility = 'hidden';
+
+
+            clearInterval(interval);
+
+            var highScore = localStorage.getItem(snake+ground);
+            if (highScore == undefined || highScore==null) localStorage.setItem(snake+ground, score);
+            if (score > highScore) {
+                localStorage.setItem(snake+ground, score);
+                alert("Congratulations! You beat the previous score (" +highScore+ ')');
+            }
+            scoreDisplay.style.fontSize = "20px";
+            scoreDisplay.innerHTML = "HIGH SCORE: "+ highScore+" YOUR SCORE: "+ (score);
+
+        }
+
+        /*
+            * Triggered when user requests for high score
+            * Checks the high score for current game (accounts for both difficulty and mode)
+            * Adds the score the the existing high-score element.
+        */
+        function showHighScore() {
+            var highScore = localStorage.getItem(snake+ground);
+            if (highScore == undefined || highScore == null) {
+                localStorage.setItem(snake+ground, 0);
+                highScore = 0;
+            }
+            document.getElementById('high-score').innerHTML = "High Score: "+" " + highScore + "<p style = \"font-size: 20px; width: 70%; margin: 0 auto\">Click to update</p>" ;
+        }
+
+    </script>
+
+</body>
+</html>
