@@ -1,3 +1,4 @@
+
 <!-- 
     SNAKE GAME CREATED WITH JAVASCRIPT ()
     DEVELOPED BY: SIRJAN SHARMA
@@ -117,7 +118,6 @@
     * second canvas is used for food
     * third canvas is used for rocks (hence has contents only in rocky game mode)
  -->
-    <a href="https://github.com/ssirjann/js-snake" style="position:absolute">Get the code here</a>
 
     <canvas id="myCanvas" height=500 width=900
         style="border:5px solid #000000;">
@@ -419,31 +419,33 @@
             * If the game is over or not yet started respond to space key (to start the game)
         */
         function checkKey(e) {
-            if(e.keyIdentifier == "Up" || e.keyIdentifier == "Down" || e.keyIdentifier == "Left" || e.keyIdentifier == "Right" || e.keyIdentifier == "U+0050" || e.keyIdentifier=="U+0020") 
+            console.log(e);
+            if(e.key == "ArrowUp" || e.key == "ArrowDown" || e.key == "ArrowLeft" || e.key == "ArrowRight" || e.key == " " || e.key.toLowerCase=="p") 
                 e.returnValue = false;
             if(!gameOver) {
-                switch(e.keyIdentifier) {
-                    case "Up" :
+                switch(e.key) {
+                    case "ArrowUp" :
                         if(going != 'Down' && path!='paused') {
                                 path = 'Up'
                         }
                         break;
-                    case "Down" :
+                    case "ArrowDown" :
                         if(going != 'Up' && path!='paused') {
                             path = 'Down'
                         }
                         break;
-                    case "Left" :
+                    case "ArrowLeft" :
                         if(going != 'Right' && path!='paused') {
                             path = 'Left'
                         }
                         break;
-                    case "Right" :
+                    case "ArrowRight" :
                         if(going != 'Left' && path!='paused') {
                             path = "Right"
                         }
                         break;
-                    case "U+0050" :
+                    case "p" :
+                    case "P" :
                         if(path=='paused') {
                             path = going;
                         } else {
@@ -452,7 +454,7 @@
                         break;
                 }
             }
-            if(gameOver && e.keyIdentifier=="U+0020") {
+            if(gameOver && e.key==" ") {
             	startGame();
             }
         }
@@ -501,7 +503,10 @@
             context.fill();
             context.closePath();
 
-            checkFood();
+            if(checkFood()) {
+                updateGrid();
+                summonFood();
+            }
             checkPosition();
         }
 
@@ -591,7 +596,7 @@
                 context2.clearRect(0, 0, width, height);
 
                 while(foodx%2 != 0) {  //get an even number
-                    var foodx = Math.floor(Math.random()*(gridCount-(pos.length*2)));
+                    var foodx = Math.floor(Math.random()*(grid.length-(pos.length)));
                 }
                 var foody = foodx+1;
                 
@@ -602,6 +607,7 @@
                 context2.rect(a = foodx, b=foody, l, l);
                 context2.fill();
                 context2.closePath();
+                updateGrid();
 
         }
 
@@ -672,8 +678,9 @@
         function checkFood() {
             if(x==a && y==b) {
                 score++;
-                summonFood();
-                eat=3;  //This is the number of squares to add to the snake's body.
+                // summonFood();
+                eat=3;  
+                return true;
             } 
         }
 
@@ -692,8 +699,8 @@
             };
 
             starter.style.visibility = 'visible';
-            document.getElementById('pauseInfo').style.visibility = 'hidden';
-            document.getElementById('startInfo').style.visibility = 'visible';
+            document.getElementById('pauseInfo').style.visibility = 'visible';
+            document.getElementById('startInfo').style.visibility = 'hidden';
 
 
             clearInterval(interval);
